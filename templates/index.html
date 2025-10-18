@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Designer - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+        
+        .header {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .tokens {
+            background: #e8f2ff;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            color: #667eea;
+            font-weight: 500;
+        }
+        
+        .logout-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+        }
+        
+        .sidebar {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+        
+        .sidebar h2 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        .create-room-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-bottom: 2rem;
+        }
+        
+        .rooms-list {
+            list-style: none;
+        }
+        
+        .room-item {
+            padding: 1rem;
+            border: 1px solid #e1e5e9;
+            border-radius: 5px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .room-item:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .room-item.active {
+            border-color: #667eea;
+            background: #e8f2ff;
+        }
+        
+        .room-name {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        
+        .room-date {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .content-area {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .room-form {
+            display: none;
+        }
+        
+        .room-form.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .file-upload {
+            border: 2px dashed #e1e5e9;
+            border-radius: 5px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        
+        .file-upload:hover {
+            border-color: #667eea;
+        }
+        
+        .file-upload.dragover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .file-upload input {
+            display: none;
+        }
+        
+        .upload-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .generate-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        
+        .generate-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .result-area {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e1e5e9;
+        }
+        
+        .generated-image {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .room-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .btn-small {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        
+        .btn-edit {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-delete {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .image-preview {
+            margin-top: 1rem;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .image-preview img {
+            max-width: 200px;
+            max-height: 150px;
+            border-radius: 5px;
+            border: 2px solid #e1e5e9;
+        }
+        
+        .remove-btn {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .remove-btn:hover {
+            background: #ff5252;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                padding: 1rem;
+            }
+            
+            .container {
+                padding: 0 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">🏠 Room Designer</div>
+        <div class="user-info">
+            <div class="tokens">Tokens: <span id="token-count">1000</span></div>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="main-content">
+            <div class="sidebar">
+                <h2>My Rooms</h2>
+                <button class="create-room-btn" onclick="createNewRoom()">+ Create New Room</button>
+                <ul class="rooms-list" id="rooms-list">
+                    <!-- Rooms will be loaded here -->
+                </ul>
+            </div>
+            
+            <div class="content-area">
+                <div id="welcome-message">
+                    <h2>Welcome to Room Designer!</h2>
+                    <p>Create a new room or select an existing one to get started with AI-powered interior design.</p>
+                </div>
+                
+                <div class="room-form" id="room-form">
+                    <h2 id="room-form-title">Room Details</h2>
+                    
+                    <div class="form-group">
+                        <label for="room-name">Room Name</label>
+                        <input type="text" id="room-name" placeholder="Enter room name">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="room-width">Width (m)</label>
+                            <input type="number" id="room-width" step="0.1" placeholder="3.5">
+                        </div>
+                        <div class="form-group">
+                            <label for="room-length">Length (m)</label>
+                            <input type="number" id="room-length" step="0.1" placeholder="4.0">
+                        </div>
+                        <div class="form-group">
+                            <label for="room-height">Height (m)</label>
+                            <input type="number" id="room-height" step="0.1" placeholder="2.7">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="style-prefs">Style Preferences</label>
+                        <input type="text" id="style-prefs" placeholder="e.g., minimalism, loft, modern">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="color-prefs">Color Preferences</label>
+                        <input type="text" id="color-prefs" placeholder="e.g., neutral, warm, cool">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="extra-prefs">Additional Preferences</label>
+                        <textarea id="extra-prefs" rows="3" placeholder="e.g., more light, natural wood, cozy atmosphere"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Upload Room Image</label>
+                        <div class="file-upload" onclick="document.getElementById('room-image').click()" id="room-upload-area">
+                            <div class="upload-icon">📷</div>
+                            <div>Click to upload room image</div>
+                            <input type="file" id="room-image" accept="image/*" onchange="previewImage(this, 'room-preview')">
+                        </div>
+                        <div id="room-preview" class="image-preview" style="display: none;">
+                            <img id="room-preview-img" alt="Room preview">
+                            <button type="button" onclick="removeImage('room-image', 'room-preview')" class="remove-btn">✕</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Upload Reference Image</label>
+                        <div class="file-upload" onclick="document.getElementById('reference-image').click()" id="reference-upload-area">
+                            <div class="upload-icon">🎨</div>
+                            <div>Click to upload reference style image</div>
+                            <input type="file" id="reference-image" accept="image/*" onchange="previewImage(this, 'reference-preview')">
+                        </div>
+                        <div id="reference-preview" class="image-preview" style="display: none;">
+                            <img id="reference-preview-img" alt="Reference preview">
+                            <button type="button" onclick="removeImage('reference-image', 'reference-preview')" class="remove-btn">✕</button>
+                        </div>
+                    </div>
+                    
+                    <button class="generate-btn" onclick="generateInterior()" id="generate-btn">
+                        Generate Interior Design (FREE)
+                    </button>
+                    
+                    <button class="generate-btn generate-3d-btn" onclick="generate3D()" id="generate-3d-btn" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); margin-top: 0.5rem;">
+                        Generate 3D Model - Coming Soon
+                    </button>
+                    
+                    <div class="room-actions">
+                        <button class="btn-small btn-edit" onclick="saveRoom()">Save Room</button>
+                        <button class="btn-small btn-delete" onclick="deleteRoom()">Delete Room</button>
+                    </div>
+                </div>
+                
+                <div class="result-area" id="result-area" style="display: none;">
+                    <h3>Generated Interior</h3>
+                    <img id="generated-image" class="generated-image" alt="Generated interior">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentRoomId = null;
+        let rooms = [];
+        
+        // Load user tokens
+        async function loadTokens() {
+            try {
+                const response = await fetch('/api/user/tokens');
+                const data = await response.json();
+                document.getElementById('token-count').textContent = data.tokens;
+            } catch (error) {
+                console.error('Error loading tokens:', error);
+            }
+        }
+        
+        // Load rooms
+        async function loadRooms() {
+            try {
+                const response = await fetch('/api/rooms');
+                rooms = await response.json();
+                renderRooms();
+            } catch (error) {
+                console.error('Error loading rooms:', error);
+            }
+        }
+        
+        // Render rooms list
+        function renderRooms() {
+            const roomsList = document.getElementById('rooms-list');
+            roomsList.innerHTML = '';
+            
+            rooms.forEach(room => {
+                const li = document.createElement('li');
+                li.className = 'room-item';
+                li.innerHTML = `
+                    <div class="room-name">${room.name}</div>
+                    <div class="room-date">${new Date(room.created_at).toLocaleDateString()}</div>
+                `;
+                li.onclick = () => selectRoom(room.id);
+                roomsList.appendChild(li);
+            });
+        }
+        
+        // Select room
+        function selectRoom(roomId) {
+            currentRoomId = roomId;
+            const room = rooms.find(r => r.id === roomId);
+            
+            // Update active room in list
+            document.querySelectorAll('.room-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.room-item').classList.add('active');
+            
+            // Show room form
+            document.getElementById('welcome-message').style.display = 'none';
+            document.getElementById('room-form').classList.add('active');
+            
+            // Fill form with room data
+            document.getElementById('room-name').value = room.name || '';
+            document.getElementById('room-width').value = room.width || '';
+            document.getElementById('room-length').value = room.length || '';
+            document.getElementById('room-height').value = room.height || '';
+            document.getElementById('style-prefs').value = room.style_prefs || '';
+            document.getElementById('color-prefs').value = room.color_prefs || '';
+            document.getElementById('extra-prefs').value = room.extra_prefs || '';
+            
+            // Show generated image if exists
+            if (room.generated_image_path) {
+                document.getElementById('result-area').style.display = 'block';
+                document.getElementById('generated-image').src = `/uploads/${room.generated_image_path.split('/').pop()}`;
+            } else {
+                document.getElementById('result-area').style.display = 'none';
+            }
+            
+            // Clear image previews
+            document.getElementById('room-preview').style.display = 'none';
+            document.getElementById('reference-preview').style.display = 'none';
+            document.getElementById('room-image').value = '';
+            document.getElementById('reference-image').value = '';
+        }
+        
+        // Create new room
+        async function createNewRoom() {
+            try {
+                const response = await fetch('/api/rooms', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: `Room ${new Date().toLocaleDateString()}`
+                    })
+                });
+                
+                const newRoom = await response.json();
+                await loadRooms();
+                selectRoom(newRoom.id);
+                
+                // Clear image previews for new room
+                document.getElementById('room-preview').style.display = 'none';
+                document.getElementById('reference-preview').style.display = 'none';
+                document.getElementById('room-image').value = '';
+                document.getElementById('reference-image').value = '';
+            } catch (error) {
+                console.error('Error creating room:', error);
+                showError('Failed to create room');
+            }
+        }
+        
+        // Save room
+        async function saveRoom() {
+            if (!currentRoomId) return;
+            
+            const roomData = {
+                name: document.getElementById('room-name').value,
+                width: parseFloat(document.getElementById('room-width').value),
+                length: parseFloat(document.getElementById('room-length').value),
+                height: parseFloat(document.getElementById('room-height').value),
+                style_prefs: document.getElementById('style-prefs').value,
+                color_prefs: document.getElementById('color-prefs').value,
+                extra_prefs: document.getElementById('extra-prefs').value
+            };
+            
+            try {
+                const response = await fetch(`/api/rooms/${currentRoomId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(roomData)
+                });
+                
+                if (response.ok) {
+                    showSuccess('Room saved successfully');
+                    await loadRooms();
+                } else {
+                    showError('Failed to save room');
+                }
+            } catch (error) {
+                console.error('Error saving room:', error);
+                showError('Failed to save room');
+            }
+        }
+        
+        // Delete room
+        async function deleteRoom() {
+            if (!currentRoomId) return;
+            
+            if (!confirm('Are you sure you want to delete this room?')) return;
+            
+            try {
+                const response = await fetch(`/api/rooms/${currentRoomId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showSuccess('Room deleted successfully');
+                    currentRoomId = null;
+                    document.getElementById('room-form').classList.remove('active');
+                    document.getElementById('welcome-message').style.display = 'block';
+                    
+                    // Clear image previews
+                    document.getElementById('room-preview').style.display = 'none';
+                    document.getElementById('reference-preview').style.display = 'none';
+                    document.getElementById('room-image').value = '';
+                    document.getElementById('reference-image').value = '';
+                    
+                    await loadRooms();
+                } else {
+                    showError('Failed to delete room');
+                }
+            } catch (error) {
+                console.error('Error deleting room:', error);
+                showError('Failed to delete room');
+            }
+        }
+        
+        // Upload file
+        async function uploadFile(file, type) {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Upload failed');
+                }
+                
+                return data.path;
+            } catch (error) {
+                console.error('Error uploading file:', error);
+                showError(`Failed to upload ${type} image: ${error.message}`);
+                throw error;
+            }
+        }
+        
+        // Generate interior
+        async function generateInterior() {
+            if (!currentRoomId) {
+                showError('Please select a room first');
+                return;
+            }
+            
+            const roomImage = document.getElementById('room-image').files[0];
+            const referenceImage = document.getElementById('reference-image').files[0];
+            
+            if (!roomImage || !referenceImage) {
+                showError('Please upload both room and reference images');
+                return;
+            }
+            
+            // Check if room dimensions are filled
+            const width = document.getElementById('room-width').value;
+            const length = document.getElementById('room-length').value;
+            const height = document.getElementById('room-height').value;
+            
+            if (!width || !length || !height) {
+                showError('Please fill in room dimensions (width, length, height)');
+                return;
+            }
+            
+            const generateBtn = document.getElementById('generate-btn');
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Generating...';
+            
+            try {
+                // Upload images
+                showSuccess('Uploading images...');
+                const roomImagePath = await uploadFile(roomImage, 'room');
+                const referenceImagePath = await uploadFile(referenceImage, 'reference');
+                
+                console.log('Uploaded paths:', { roomImagePath, referenceImagePath });
+                
+                if (!roomImagePath || !referenceImagePath) {
+                    throw new Error('Failed to upload images');
+                }
+                
+                showSuccess('Images uploaded successfully! Generating interior...');
+                
+                // Update room with image paths
+                console.log('Saving image paths:', { roomImagePath, referenceImagePath });
+                const updateResponse = await fetch(`/api/rooms/${currentRoomId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        room_image_path: roomImagePath,
+                        reference_image_path: referenceImagePath
+                    })
+                });
+                
+                if (!updateResponse.ok) {
+                    throw new Error('Failed to save image paths to room');
+                }
+                
+                console.log('Image paths saved successfully');
+                
+                // Generate interior
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        room_id: currentRoomId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess('Interior generated successfully!');
+                    document.getElementById('result-area').style.display = 'block';
+                    
+                    // Get filename from path
+                    const filename = data.generated_image_path.split('/').pop();
+                    console.log('Generated image filename:', filename);
+                    console.log('Full generated image path:', data.generated_image_path);
+                    
+                    // Set image source
+                    const imageSrc = `/uploads/${filename}`;
+                    console.log('Image source URL:', imageSrc);
+                    document.getElementById('generated-image').src = imageSrc;
+                    
+                    // Add error handling for image loading
+                    document.getElementById('generated-image').onerror = function() {
+                        console.error('Failed to load image:', imageSrc);
+                        showError('Failed to load generated image. Please check the file.');
+                    };
+                    
+                    await loadTokens();
+                    await loadRooms();
+                } else {
+                    showError(data.error || 'Failed to generate interior');
+                }
+            } catch (error) {
+                console.error('Error generating interior:', error);
+                if (error.message.includes('upload')) {
+                    showError('Failed to upload images. Please try again.');
+                } else {
+                    showError('Failed to generate interior. Please try again.');
+                }
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = 'Generate Interior Design (FREE)';
+            }
+        }
+        
+        // Generate 3D Model (placeholder function)
+        async function generate3D() {
+            showError('3D generation feature is coming soon! This will generate 3D models of your interior design.');
+        }
+        
+        // Show error message
+        function showError(message) {
+            // Remove existing messages
+            document.querySelectorAll('.error, .success').forEach(msg => msg.remove());
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            document.querySelector('.content-area').insertBefore(errorDiv, document.querySelector('.content-area').firstChild);
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+        
+        // Show success message
+        function showSuccess(message) {
+            // Remove existing messages
+            document.querySelectorAll('.error, .success').forEach(msg => msg.remove());
+            
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.textContent = message;
+            document.querySelector('.content-area').insertBefore(successDiv, document.querySelector('.content-area').firstChild);
+            setTimeout(() => successDiv.remove(), 5000);
+        }
+        
+        // Preview uploaded image
+        function previewImage(input, previewId) {
+            const file = input.files[0];
+            if (file) {
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    showError('Please select a valid image file');
+                    input.value = '';
+                    return;
+                }
+                
+                // Validate file size (max 16MB)
+                if (file.size > 16 * 1024 * 1024) {
+                    showError('Image file is too large. Maximum size is 16MB');
+                    input.value = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById(previewId);
+                    const previewImg = document.getElementById(previewId + '-img');
+                    previewImg.src = e.target.result;
+                    preview.style.display = 'block';
+                    
+                    // Show success message
+                    const imageType = previewId === 'room-preview' ? 'Room' : 'Reference';
+                    showSuccess(`${imageType} image loaded successfully!`);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        // Remove uploaded image
+        function removeImage(inputId, previewId) {
+            document.getElementById(inputId).value = '';
+            document.getElementById(previewId).style.display = 'none';
+            
+            // Show success message
+            const imageType = previewId === 'room-preview' ? 'Room' : 'Reference';
+            showSuccess(`${imageType} image removed`);
+        }
+        
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTokens();
+            loadRooms();
+        });
+    </script>
+</body>
+</html>
