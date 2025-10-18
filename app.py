@@ -2,27 +2,40 @@ import os
 import base64
 import sqlite3
 from datetime import datetime
+
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_from_directory
 from werkzeug.utils import secure_filename
+
+# Если используешь официальный SDK OpenAI 1.x
 from openai import OpenAI
-import uuid
-import requests
 
+# -----------------------------------------------------------------------------
+# Flask-приложение и базовая конфигурация
+# -----------------------------------------------------------------------------
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-change-in-production'
 
-# Configuration
-UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+# Секрет берем из переменных окружения (а не хардкодим)
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "change-me-in-production")
 
-# OpenAI client
-# NOTE: keep your real API key secure and out of source control in production
-client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+# Файлы/загрузка
+UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER", "uploads")
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 
-# Ensure upload directory exists
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB
+
+# Гарантируем существование папки загрузок
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# -----------------------------------------------------------------------------
+# OpenAI: ленивое создание клиента, чтобы импорт модуля не падал без ключа
+# -----------------------------------------------------------------------------
+def get_openai_client() -> OpenAI:
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        # Делай raise с понятным текстом — увидишь в логах Render
+        raise RuntimeError("OPENAI_API_KEY is not set in environment")
+    return OpenAI(api_key=api_key)
 
 
 def init_db():
@@ -494,4 +507,5 @@ def uploaded_file(filename):
 if __name__ == '__main__':
     init_db()
     app.run(debug=True, host='0.0.0.0', port=5000)
+
 
