@@ -6,44 +6,43 @@ from datetime import datetime
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_from_directory
 from werkzeug.utils import secure_filename
 
-# Если используешь официальный SDK OpenAI 1.x
-from openai import OpenAI
+import requests  # ✨ не забудь этот импорт — он используется в генерации
+from openai import OpenAI  # официальный SDK OpenAI 1.x
 
 # -----------------------------------------------------------------------------
 # Flask-приложение и базовая конфигурация
 # -----------------------------------------------------------------------------
 app = Flask(__name__)
 
-# Секрет берем из переменных окружения (а не хардкодим)
+# Секретный ключ лучше хранить в переменных окружения на Render
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "change-me-in-production")
 
-# Файлы/загрузка
+# Загрузка файлов
 UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER", "uploads")
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB
 
-# Гарантируем существование папки загрузок
+# Убедимся, что папка загрузок существует
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # -----------------------------------------------------------------------------
-# OpenAI: ленивое создание клиента, чтобы импорт модуля не падал без ключа
+# OpenAI: ленивое создание клиента (чтобы не падать при импорте без ключа)
 # -----------------------------------------------------------------------------
 def get_openai_client() -> OpenAI:
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
-        # Делай raise с понятным текстом — увидишь в логах Render
         raise RuntimeError("OPENAI_API_KEY is not set in environment")
     return OpenAI(api_key=api_key)
 
-
+# -----------------------------------------------------------------------------
+# SQLite: инициализация БД
+# -----------------------------------------------------------------------------
 def init_db():
-    """Initialize the database with required tables"""
-    conn = sqlite3.connect('app.db')
+    conn = sqlite3.connect("app.db")
     cursor = conn.cursor()
 
-    # Users table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,7 +52,6 @@ def init_db():
         )
     ''')
 
-    # Rooms table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS rooms (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,6 +74,10 @@ def init_db():
     conn.commit()
     conn.close()
 
+# Инициализация БД под Gunicorn (т.к. if __name__ == "__main__" не сработает)
+@app.before_first_request
+def _ensure_db():
+    init_db()
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -507,5 +509,6 @@ def uploaded_file(filename):
 if __name__ == '__main__':
     init_db()
     app.run(debug=True, host='0.0.0.0', port=5000)
+
 
 
