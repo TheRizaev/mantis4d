@@ -19,7 +19,7 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 # OpenAI client
 # NOTE: keep your real API key secure and out of source control in production
-client = OpenAI(api_key="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")
+client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
 # Ensure upload directory exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -494,3 +494,4 @@ def uploaded_file(filename):
 if __name__ == '__main__':
     init_db()
     app.run(debug=True, host='0.0.0.0', port=5000)
+
